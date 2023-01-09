@@ -5,12 +5,9 @@ from helper_functions import mat_norm
 from models.ld_regression_model import LDRegressionModel
 
 #-- ### NOTE ###
-#-- For now this code works with a sort of cheating EM algorithm without SGD, but with sampling
-#-- eventually it should be enforced that it is truly a low-dimensional sampler, in that it
-#-- directly computes using linear algebra, once this is implemented it should then be
-#-- modified to inherit LeastSquaresSampler. However it should NOT be changed until the SGD is 
-#-- working properly in the LeastSquaresSampler class because as of now it acts as a good
-#-- middle ground/ reference for sampling EM without SGD
+#-- This code is currently equivalent to using LeastSquaresSampler with
+#-- batch_size = n, it should eventually be changed to compute the true samples
+#-- using the actual matrix inversions etc.
 
 class LDLeastSquaresSampler():
 	def __init__(self, model, sampler, mean):
