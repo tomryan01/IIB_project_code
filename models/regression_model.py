@@ -72,21 +72,21 @@ class RegressionModel():
 	# generate Phi (nm x d') from X (n x m) and function phi (d -> m x d')
 	def generate_Phi(self, X, phi, idx):
 		nm = self.nm
-		Phi = np.zeros((nm, self.d_dash))
+		Phi = np.zeros((len(idx)*self.m, self.d_dash))
 		# TODO: Look at more efficient approach of subsampling here
-		for i in idx:
-			Phi[i*self.m:(i+1)*self.m] = phi(X[i])
+		for i, index in enumerate(idx):
+			Phi[i*self.m:(i+1)*self.m] = phi(X[index])
 		return Phi
 
 	# generate B (nm x nm) from B_values (n x m)
 	def generate_B(self, B_values, idx):
 		nm = self.nm
 		B_values.flatten()
-		B = np.zeros((nm, nm))
+		B = np.zeros((len(idx)*self.m, len(idx)*self.m))
 		# TODO: Look at more efficient approach of subsampling here
-		for i in idx:
+		for i, index in enumerate(idx):
 			for j in range(self.m):
-				B[i+j][i+j] = B_values[i+j]
+				B[i+j][i+j] = B_values[index+j]
 		return B
 
 	# generate stochastic gradient estimate

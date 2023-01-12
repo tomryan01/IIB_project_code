@@ -18,7 +18,7 @@ class LeastSquaresSampler():
 		# A (d' x d')
 		# Phi (nm x d')
 		test_z = np.zeros(self.model.d_dash)
-		test_epsilon = np.ones(self.model.nm)
+		test_epsilon = np.ones(self.model.m * batch_size)
 		test_theta_0 = np.ones(self.model.d_dash)
 		test_A = np.diag(np.ones(self.model.d_dash))
 
@@ -58,8 +58,8 @@ class LeastSquaresSampler():
 	def E_step(self, num_samples, Phi, B, add_mean=True):
 		samples = np.zeros((num_samples, self.model.d_dash))
 		for i in range(num_samples):
-			epsilon = np.zeros(self.model.nm)
-			for j in range(self.model.n):
+			epsilon = np.zeros(self.model.m * self.batch_size)
+			for j in range(self.batch_size):
 				if self.model.m == 1:
 					epsilon[j:(j+1)] = np.random.multivariate_normal(np.zeros(self.model.m), np.linalg.inv(np.array([np.array([self.model.B_i[j]])])))
 				else:
@@ -95,7 +95,7 @@ class LeastSquaresSampler():
 		return A_mean, self.E_step(num_samples, Phi, B, add_mean=True)
 
 def minimizer1(z, epsilon, theta_0, B, A, Phi):
-	a = 0.5*mat_norm(B, Phi @ z - epsilon)
+	a = 0.5*mat_norm(B, (Phi @ z) - epsilon)
 	b = 0.5*mat_norm(A, z - theta_0)
 	return a+b
 
