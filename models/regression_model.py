@@ -94,7 +94,7 @@ class RegressionModel():
 		idx = subsample(self.n, self.n/batch_size)
 		B = self.generate_B(self.B_i, idx)
 		Phi = self.generate_Phi(self.X, self.phi, idx)
-		return Phi.T @ B @ Phi @ theta - Phi.T @ B @ self.Y + self.A @ theta
+		return (self.n / batch_size) * (Phi.T @ B @ Phi @ theta - Phi.T @ B @ self.Y) + self.A @ theta
 
 	@DeprecationWarning
 	def empirical_grad_U(self, theta, h):
