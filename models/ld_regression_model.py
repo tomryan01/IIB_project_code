@@ -5,18 +5,18 @@ class LDRegressionModel(RegressionModel):
 	def __init__(self, X, Y, B, A, phi):
 		super(LDRegressionModel, self).__init__(X, Y, B, A, phi)
 		self.B = self.generate_B(B)
-		self.Phi = self.generate_Phi(X, phi)
+		self.Phi = self.generate_Phi(X)
 		self.M = self.Phi.T @ self.B @ self.Phi
 		self.H = self.M + self.A
 		self.Hinv = np.linalg.inv(self.H)
 		self.mean = self.Hinv @ self.Phi.T @ self.B @ self.Y # precompute mean
 
 	# generate Phi (nm x d') from X (n x m) and function phi (d -> m x d')
-	def generate_Phi(self, X, phi):
+	def generate_Phi(self, X):
 		nm = self.nm
 		Phi = np.zeros((nm, self.d_dash))
 		for i in range(self.n):
-			Phi[i*self.m:(i+1)*self.m] = phi(X[i])
+			Phi[i*self.m:(i+1)*self.m] = self.phi(X[i])
 		return Phi
 
 	# generate B (nm x nm) from B_values (n x m)

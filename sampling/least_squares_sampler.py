@@ -1,16 +1,11 @@
-from models.regression_model import RegressionModel
+from models.hd_regression_model import RegressionModel
+from sampling.hd_regression_sampler import HDRegressionSampler
 from helper_functions import subsample, mat_norm, inv_diag
 import numpy as np
 
-class LeastSquaresSampler():
-	def __init__(self, model, mean, batch_size):
-		### Ensure Model is Correct
-		assert isinstance(model, RegressionModel)
-		self.model = model
-
-		### Ensure batch size is correct
-		assert batch_size <= model.n
-		self.batch_size = batch_size
+class LeastSquaresSampler(HDRegressionSampler):
+	def __init__(self, model, batch_size, mean):
+		super(LeastSquaresSampler, self).__init__(model, batch_size)
 
 		### Ensure mean is of correct dimensions
 		assert mean.shape[0] == self.model.d_dash, "Length of mean should be equal to the number of parameters {}, got {}".format(self.model.d_dash, mean.shape[0])
@@ -27,11 +22,11 @@ class LeastSquaresSampler():
 	# compute grad_L using minibatches
 	def stoc_grad_L(self, z, epsilon, theta_0):
 		idx = subsample(self.model.n, self.model.n/self.batch_size)
-		Phi = self.model.generate_Phi(self.model.X, self.model.phi, idx)
+		Phi = self.model.generate_Phi(self.model.X, idx)
 		B = self.model.generate_B(self.model.B_i, idx)
 		return (self.model.n / self.batch_size) * (z.T @ (Phi.T @ B @ Phi + self.model.A) - theta_0.T @ self.model.A - epsilon.T @ B.T @ Phi)
 
-	def sample(self, threshold=0.1, rate=0.001, max_iters=100000):
+	def sample(self, threshold=5, rate=0.1, max_iters=100000):
 		# compute epsilon
 		epsilon = np.zeros(self.model.m * self.batch_size)
 		for j in range(self.batch_size):
@@ -53,6 +48,6 @@ class LeastSquaresSampler():
 			iters += 1
 			if iters > max_iters:
 				raise Exception("Maximum number of iterations met for SGD")
-		return z + self.mean
+		return z
 
 		
