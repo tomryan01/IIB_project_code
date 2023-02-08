@@ -1,7 +1,9 @@
 from models.hd_regression_model import RegressionModel
 from sampling.hd_regression_sampler import HDRegressionSampler
+from scipy.optimize import minimize
 from helper_functions import subsample, mat_norm, inv_diag
 import numpy as np
+from tqdm import tqdm
 
 class LeastSquaresSampler(HDRegressionSampler):
 	def __init__(self, model, batch_size, mean):
@@ -13,9 +15,8 @@ class LeastSquaresSampler(HDRegressionSampler):
 
 	### compute objective function exactly
 	def L(self, z, epsilon, theta_0):
-		idx = subsample(self.model.n, self.model.n/self.batch_size)
-		Phi = self.model.generate_Phi(self.model.X, self.model.phi, idx)
-		B = self.model.generate_B(self.model.B_i, idx)
+		Phi = self.model.generate_Phi(self.model.X, range(self.model.n))
+		B = self.model.generate_B(self.model.B_i, range(self.model.n))
 		theta_n = theta_0 + inv_diag(self.model.A) @ Phi.T @ B @ epsilon
 		return 0.5*mat_norm(B, Phi @ z) + 0.5*mat_norm(self.model.A, z - theta_n)
 	
@@ -24,12 +25,15 @@ class LeastSquaresSampler(HDRegressionSampler):
 		idx = subsample(self.model.n, self.model.n/self.batch_size)
 		Phi = self.model.generate_Phi(self.model.X, idx)
 		B = self.model.generate_B(self.model.B_i, idx)
-		return (self.model.n / self.batch_size) * (z.T @ (Phi.T @ B @ Phi + self.model.A) - theta_0.T @ self.model.A - epsilon.T @ B.T @ Phi)
+		return (self.model.n / self.batch_size) * (z.T @ (Phi.T @ B @ Phi + self.model.A) - theta_0.T @ self.model.A - epsilon[idx].T @ B.T @ Phi)
 
-	def sample(self, threshold=5, rate=0.1, max_iters=100000):
+	def trueSample(self, epsilon, theta_0):
+		return minimize(self.L, x0 = theta_0, method='Nelder-Mead', args = (epsilon, theta_0)).x
+
+	def sample(self, threshold=0.1, rate=0.001, max_iters=100000):
 		# compute epsilon
-		epsilon = np.zeros(self.model.m * self.batch_size)
-		for j in range(self.batch_size):
+		epsilon = np.zeros(self.model.m * self.model.n)
+		for j in range(self.model.n):
 			if self.model.m == 1:
 				epsilon[j:(j+1)] = np.random.multivariate_normal(np.zeros(self.model.m), np.linalg.inv(np.array([np.array([self.model.B_i[j]])])))
 			else:
@@ -39,15 +43,15 @@ class LeastSquaresSampler(HDRegressionSampler):
 		theta_0 = np.random.multivariate_normal(np.zeros(self.model.d_dash), np.linalg.inv(self.model.A))
 
 		# SGD
-		z = theta_0.copy()
-		iters = 0
+		z = np.zeros_like(theta_0)
 		grad = self.stoc_grad_L(z, epsilon, theta_0)
-		while np.linalg.norm(grad) > threshold:
-			z -= rate * grad / np.linalg.norm(grad)
+		for i in tqdm(range(max_iters)):
+			if np.linalg.norm(grad) <= threshold:
+				return z
+			z -= rate * grad * np.cos(i*np.pi/(2*max_iters))
 			grad = self.stoc_grad_L(z, epsilon, theta_0)
-			iters += 1
-			if iters > max_iters:
-				raise Exception("Maximum number of iterations met for SGD")
-		return z
+		print(grad, np.linalg.norm(grad))
+		raise Exception("Maximum number of iterations met for SGD")
+		
 
 		
