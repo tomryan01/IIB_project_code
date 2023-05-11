@@ -16,3 +16,16 @@ def subsample(N, factor, seed=None):
     if seed: np.random.seed(seed)
     idx = np.random.choice(N, size=N_sub, replace=False)  # Indexes of the randomly sampled points
     return idx
+
+def marginal_2d(x1, x2, res, size, offset):
+    grid = np.ones((res, res))
+    dx = size / res
+    for i in range(res):
+        for j in range(res):
+            grid[i][j] += np.sum(np.where(np.logical_and(np.logical_and(offset + i*dx < x1, x1 <= offset + (i+1)*dx), np.logical_and(offset + j*dx < x2, x2 <= offset + (j+1)*dx)), 1, 0))
+    print(np.sum(grid))
+    return grid / np.sum(grid)
+
+# compute D @ A where D = diag(d), used when diag(d) is too large
+def diag_mult(d, A):
+    return np.multiply(d, A.T).T
