@@ -1,15 +1,16 @@
 from models.regression_model import RegressionModel
+from helper_functions import diag_mult
 import numpy as np
 
 class LDRegressionModel(RegressionModel):
 	def __init__(self, X, Y, B, A, phi):
 		super(LDRegressionModel, self).__init__(X, Y, B, A, phi)
-		self.B = self.generate_B(B)
+		#self.B = self.generate_B(B)
 		self.Phi = self.generate_Phi(X)
-		self.M = self.Phi.T @ self.B @ self.Phi
+		self.M = self.Phi.T @ diag_mult(self.B_i, self.Phi)
 		self.H = self.M + self.A
 		self.Hinv = np.linalg.inv(self.H)
-		self.mean = self.Hinv @ self.Phi.T @ self.B @ self.Y # precompute mean
+		self.mean = self.Hinv @ self.Phi.T @ diag_mult(self.B_i, self.Y) # precompute mean
 
 	# generate Phi (nm x d') from X (n x m) and function phi (d -> m x d')
 	def generate_Phi(self, X):
