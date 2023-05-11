@@ -3,11 +3,8 @@ from tqdm import tqdm
 import numpy as np
 
 class SGHMCsampler(HDRegressionSampler):
-	def __init__(self, model, batch_size, step_size, theta_start, int_samples, mean, Minv=None, epsilon=0.1, gamma=0.01):
+	def __init__(self, model, batch_size, theta_start, int_samples, mean, Minv=None, epsilon=0.1, gamma=0.01):
 		super(SGHMCsampler, self).__init__(model, batch_size)
-
-		### Ensure inputs are correct types and dimensions
-		assert isinstance(step_size, float), "step_size must be of type (float), got {}".format(type(step_size))
 
 		# set d
 		self.d = len(theta_start)
@@ -24,7 +21,6 @@ class SGHMCsampler(HDRegressionSampler):
 
 		### set attributes
 		self.theta_start = theta_start
-		self.step_size = step_size
 		self.epsilon = epsilon
 		self.int_samples = int_samples
 		self.alpha = self.epsilon * self.Minv # This assumes an identity friction matrix C
@@ -46,7 +42,7 @@ class SGHMCsampler(HDRegressionSampler):
 		v = v_t.copy()
 
 		# inner loop to ensure low correlation between samples
-		for i in range(self.int_samples):
+		for i in tqdm(range(self.int_samples)):
 			theta += v
 			v += -1*self.nu * self.model.grad_U(theta, self.batch_size) -1*self.alpha @ v + np.random.multivariate_normal(np.zeros(self.d), 2*(self.alpha - self.beta_hat)*self.nu)
 		

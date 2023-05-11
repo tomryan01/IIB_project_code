@@ -9,8 +9,8 @@ class EMOptimiser():
 		### Confirm sampler type
 		assert isinstance(sampler, RegressionSampler)
 		self.sampler = sampler
-		self.Phi = self.sampler.model.Phi
-		self.B = self.sampler.model.B
+		#self.Phi = self.sampler.model.Phi
+		#self.B = self.sampler.model.B
 
 	def E_step(self, num_samples):
 		return np.array([self.sampler.sample() for i in range(num_samples)])
