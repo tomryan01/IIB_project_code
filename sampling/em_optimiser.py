@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.optimize import minimize
 from tqdm import tqdm
-from helper_functions import mat_norm, subsample
+from utils.helper_functions import mat_norm, subsample
 from sampling.regression_sampler import RegressionSampler
 
 class EMOptimiser():

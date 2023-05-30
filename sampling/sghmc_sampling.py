@@ -38,13 +38,31 @@ class SGHMCsampler(HDRegressionSampler):
 	def sample(self):
 		V = (self.epsilon ** 2) * self.Minv # covariance matrix needs to be converted from M, since we use v and not r
 		v_t = np.random.multivariate_normal(np.zeros(self.d), V)
-		theta = self.theta_t.copy()
+		theta = self.theta_t.copy() #self.theta_start.copy() + np.random.multivariate_normal(np.zeros(self.d), 2*(self.alpha - self.beta_hat)*self.nu)
 		v = v_t.copy()
 
 		# inner loop to ensure low correlation between samples
 		for i in tqdm(range(self.int_samples)):
 			theta += v
-			v += -1*self.nu * self.model.grad_U(theta, self.batch_size) -1*self.alpha @ v + np.random.multivariate_normal(np.zeros(self.d), 2*(self.alpha - self.beta_hat)*self.nu)
+			v += -1*self.nu * self.model.grad_U(theta, self.batch_size).astype(np.float64) -1*self.alpha @ v + np.random.multivariate_normal(np.zeros(self.d), 2*(self.alpha - self.beta_hat)*self.nu)
+		
+		# update theta_t
+		self.theta_t = theta
+
+		# no MH-step required
+		return theta - self.mean
+
+	# draw sample with no additionals (debugging, logging, etc.)
+	def sample_raw(self):
+		V = (self.epsilon ** 2) * self.Minv # covariance matrix needs to be converted from M, since we use v and not r
+		v_t = np.random.multivariate_normal(np.zeros(self.d), V)
+		theta = self.theta_t.copy()
+		v = v_t.copy()
+
+		# inner loop to ensure low correlation between samples
+		for i in range(self.int_samples):
+			theta += v
+			v += -1*self.nu * self.model.grad_U(theta, self.batch_size).astype(np.float64) -1*self.alpha @ v + np.random.multivariate_normal(np.zeros(self.d), 2*(self.alpha - self.beta_hat)*self.nu)
 		
 		# update theta_t
 		self.theta_t = theta
