@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.stats import multivariate_normal
+import matplotlib.pyplot as plt
 
 def get_bin_index(coord, bottom_left_x, top_right_x, n, m):
 	def find_index(x, xmin, xmax, n):
@@ -41,7 +42,8 @@ def make_histogram(X, n, d1, d2, Hinv, mu):
 		bottom_left[1] = np.min((bottom_left[1], np.min(outliers[:,1])))
 
 	# compute number of bins along y axis based on scale
-	m = np.max((2, int(n*np.abs(bottom_left[1]-top_right[1] / bottom_left[0]-top_right[0])))) # make m at least 2 
+	m = np.max((2, int(n*np.abs(bottom_left[1]-top_right[1] / bottom_left[0]-top_right[0])))) # make m at least 2
+	m = int(np.round(np.min((m, 5*n)))) # make m at maximum n * 5
 
 	# compute individual bin sizes
 	dx = np.abs((bottom_left[0] - top_right[0])) / n
@@ -97,7 +99,7 @@ def calc_expected_distance_metric(samples, mean, cov, N):
 	num_samples = samples.shape[0]
 	# scale number of bins according to: https://stats.stackexchange.com/questions/114490/optimal-bin-width-for-two-dimensional-histogram
 	# TODO: This is likely also dependent on the scale of the distribution
-	num_bins = np.max((2, int(5 * num_samples**(1/4))))
+	num_bins = compute_num_bins(num_samples)
 	print("Bin Length of order: {}".format(num_bins))
 	d = len(mean)
 	for _ in range(N):
@@ -113,6 +115,9 @@ def calc_expected_distance_metric(samples, mean, cov, N):
 	
 	metric /= N
 	return metric
+
+def compute_num_bins(num_samples):
+	return int(np.round(np.max((2, int(3 * num_samples**(1/4))))))
 
 def compute_full_metric(samples, cov, mu, metric_iters):
 	metric = 0
@@ -134,3 +139,24 @@ def compute_full_metric(samples, cov, mu, metric_iters):
 	
 	metric /= metric_iters
 	return metric, hists
+
+def plot_density(bins):
+    """
+    Given a 2D array of bins with values equal to a count,
+    this function plots a visual representation of the density.
+    """
+    # Calculate the extent of the plot
+    x_min, x_max = 0, bins.shape[0]
+    y_min, y_max = 0, bins.shape[1]
+
+    # Plot the density
+    fig, ax = plt.subplots()
+    img = ax.imshow(bins, cmap='gray', interpolation='nearest', extent=[x_min, x_max, y_min, y_max])
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+
+    # Add colorbar
+    cbar = fig.colorbar(img)
+    cbar.set_label('Density')
+
+    return fig, ax
