@@ -1,5 +1,5 @@
 from models.regression_model import RegressionModel
-from helper_functions import diag_mult
+from utils.helper_functions import diag_mult
 import numpy as np
 
 class LDRegressionModel(RegressionModel):

@@ -1,19 +1,18 @@
 import numpy as np
-from helper_functions import subsample, diag_mult
+from utils.helper_functions import subsample, diag_mult
 from models.regression_model import RegressionModel
 
 class HDRegressionModel(RegressionModel):
 	def __init__(self, X, Y, B, A, phi):
 		super(HDRegressionModel, self).__init__(X, Y, B, A, phi)
-		self.Phi = self.generate_Phi(X, range(self.n))
-		#self.B = self.generate_B(self.B_i, range(self.n))
-
+		self.Phi = self.generate_Phi(X)
+		self.regularizer = self.Phi.T @ diag_mult(self.B_i, self.Y)
+ 
 	# generate Phi (nm x d') from X (n x m) and function phi (d -> m x d')
-	def generate_Phi(self, X, idx):
-		Phi = np.zeros((len(idx)*self.m, self.d_dash))
-		# TODO: Look at more efficient approach of subsampling here
-		for i, index in enumerate(idx):
-			Phi[i*self.m:(i+1)*self.m] = self.phi(X[index])
+	def generate_Phi(self, X):
+		Phi = np.zeros((self.n, self.d_dash))
+		for i in range(self.n):
+			Phi[i] = self.phi(X[i])
 		return Phi
 
 	# generate B (nm x nm) from B_values (n x m)
@@ -41,9 +40,9 @@ class HDRegressionModel(RegressionModel):
 	def grad_U(self, theta, batch_size):
 		idx = subsample(self.n, self.n/batch_size)
 		B = self.generate_B(self.B_i, idx)
-		Phi = self.generate_Phi(self.X, idx)
+		Phi = self.Phi[idx]
 		Y = self.generate_Y(self.Y, idx)
-		return (self.n / batch_size) * (Phi.T @ diag_mult(np.diagonal(B), Phi) @ theta - Phi.T @ diag_mult(np.diagonal(B), Y)) + self.A @ theta
+		return (self.n / batch_size) * (Phi.T @ diag_mult(np.diagonal(B), Phi) @ theta) + self.A @ theta - self.regularizer
 
 	@DeprecationWarning
 	def empirical_grad_U(self, theta, h):
