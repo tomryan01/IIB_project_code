@@ -10,13 +10,12 @@ from models.model_generators import *
 # ranges for each type of tuning
 ranges = {
     "n_iters" : np.linspace(1000, 10000, num=10),
-    "scheduler" : [flat, cosine_annealing, stepped_lr],
     "rate" : [8e-7],
     "batch_size" : np.linspace(1000, 8000, num=8),
     "nesterov" : [0.5, 0.75, 0.9, 0.99]
 }
 
-def main(param, output_path, config_file, debug_steps):
+def main(param, output_path, config_file, problem, debug_steps):
     # read from config
     config = configparser.ConfigParser()
     config.read(config_file)
@@ -43,7 +42,11 @@ def main(param, output_path, config_file, debug_steps):
     
     # set up models and sampler
     print("INFO: Training Network")
-    net = get_trained_network(config_file)
+    if problem == 'nn':
+        net = get_trained_network(config_file)
+        model, _ = generate_nn_linear_models(config_file, net)
+    elif problem == 'synthetic':
+        model, _ = generate_synthetic_models(config_file)     
 
     # sample for parameter range
     inputs = ranges[param]
@@ -70,7 +73,6 @@ def main(param, output_path, config_file, debug_steps):
         for i, p in enumerate(inputs):
             print("Computing for learning rate = {}".format(p))
             print("INFO: Generating Linear Model")
-            model, _ = generate_nn_linear_models(config_file, net)
             _, debug = learning_rate_delegate(model, p, debug_steps=debug_steps, params=params)
             errors[i] = debug[1]
             # make new folder for outputs
@@ -88,7 +90,6 @@ def main(param, output_path, config_file, debug_steps):
         for i, p in enumerate(inputs):
             print("Computing for nesterov parameter = {}".format(p))
             print("INFO: Generating Linear Model")
-            model, _ = generate_nn_linear_models(config_file, net)
             _, debug = nesterov_momentum_delegate(model, p, debug_steps=debug_steps, params=params)
             errors[i] = debug[1]
             # make new folder for outputs
@@ -109,9 +110,9 @@ def main(param, output_path, config_file, debug_steps):
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument('--param', type=str)
+    parser.add_argument('--problem', type=str, default='nn')
     parser.add_argument('--output_path', type=str, default='ls_outputs')
-    parser.add_argument('--threshold', type=float, default=0.3)
     parser.add_argument('--config_file', type=str, default='configs/nn_config.ini')
     parser.add_argument('--sampler_debug_steps', type=int, default=1000)
     args = parser.parse_args()
-    main(args.param, args.output_path, args.config_file, args.sampler_debug_steps)
+    main(args.param, args.output_path, args.config_file, args.problem, args.sampler_debug_steps)

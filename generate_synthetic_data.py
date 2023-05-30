@@ -4,7 +4,7 @@ from tqdm import tqdm
 from argparse import ArgumentParser
 import configparser
 
-def generate_synthetic_data(config_path, x_var):
+def generate_synthetic_data(config_path, x_var, output_file):
 	# read from config
     config = configparser.ConfigParser()
     config.read(config_path)
@@ -26,11 +26,12 @@ def generate_synthetic_data(config_path, x_var):
         data[i,feature_dims] = np.dot(true_weights, data[i, :feature_dims]) + np.random.normal(0, (1/np.sqrt(observation_noise_var)))
         
     df = pd.DataFrame(data)
-    df.to_csv('synthetic_data.csv', header=False, index=False)
+    df.to_csv(output_file, header=False, index=False)
 
-if __name__ == '__main__'():
+if __name__ == '__main__':
 	parser = ArgumentParser()
-	parser.add_argument('--config_file', type=str, default='configs/config.ini')
+	parser.add_argument('--config_file', type=str, default='configs/synthetic_config.ini')
+	parser.add_argument('--output_file', type=str, default='data/synthetic_data.csv')
 	parser.add_argument('--x_var', type=float, default=10.)
 	args = parser.parse_args()
-	generate_synthetic_data(args.config_file, args.x_var)
+	generate_synthetic_data(args.config_file, args.x_var, args.output_file)

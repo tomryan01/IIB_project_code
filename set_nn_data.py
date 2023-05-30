@@ -46,6 +46,6 @@ def set_data(config_path : str):
     
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument('--config_file', type=str, default='configs/config.ini')
+    parser.add_argument('--config_file', type=str, default='configs/nn_config.ini')
     args = parser.parse_args()
     set_data(args.config_file)

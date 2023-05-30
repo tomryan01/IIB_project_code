@@ -38,8 +38,10 @@ def main(param, output_path, config_file, problem):
         net = get_trained_network(config_file)
         print("INFO: Generating Linear Model")
         model, ld_model = generate_nn_linear_models(config_file, net)
-    elif problem == 'ls':
+    elif problem == 'synthetic':
         model, ld_model = generate_synthetic_models(config_file)
+    else:
+        raise Exception("Invalid model specified")
         
     # sample for parameter range
     inputs = ranges[param]

@@ -6,7 +6,7 @@ import copy
 import os
 import configparser
 
-from neural_net.set_data import set_data
+from set_nn_data import set_data
 from neural_net.get_data import get_training_data, get_validation_data
 from neural_net.mlp import MLP
 
